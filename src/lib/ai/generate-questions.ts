@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { getAIClient, getAIConfig } from '@/lib/ai/provider';
 import { generateQuestionRequestSchema } from '@/lib/validators/ai-generate';
 import { generatedQuestionBatchSchema } from '@/lib/validators/question';
+import { generateFiguralQuestions } from '@/lib/ai/figural-generator';
 
 const SYSTEM_PROMPT = 'Kamu adalah pembuat soal latihan CPNS profesional. Buat soal CPNS orisinal, bukan menyalin soal resmi. Soal harus relevan dengan SKD CPNS, memiliki 5 pilihan jawaban A-E, satu jawaban benar, pembahasan lengkap, alasan kenapa opsi lain salah, kategori, subkategori, difficulty, tags, dan referensi materi. Jangan membuat soal ambigu. Jangan mengulang soal yang sama. Output wajib JSON valid tanpa markdown.';
 
@@ -26,6 +27,17 @@ export async function generateAndStoreQuestions(input: unknown, createdById?: st
   });
 
   try {
+    if (payload.category === 'TIU' && payload.subcategory === 'Figural') {
+      const figuralQuestions = generatedQuestionBatchSchema.parse(generateFiguralQuestions(payload));
+      validateBatch(figuralQuestions, payload.amount, payload.category, payload.subcategory);
+      const created = await persistQuestions(batch.id, figuralQuestions, payload.mode);
+      await prisma.aIQuestionBatch.update({
+        where: { id: batch.id },
+        data: { totalGenerated: created.length, status: 'completed', rawResponse: figuralQuestions },
+      });
+      return { batchId: batch.id, count: created.length, questions: created };
+    }
+
     let parsed: ReturnType<typeof generatedQuestionBatchSchema.parse> | null = null;
     let lastError = '';
 
@@ -57,35 +69,10 @@ export async function generateAndStoreQuestions(input: unknown, createdById?: st
 
     if (!parsed) throw new Error('Gagal menghasilkan soal valid setelah retry');
 
-    const created = await prisma.$transaction(async (tx) => {
-      const rows = await Promise.all(parsed.map((item) => tx.question.create({
-        data: {
-          question: item.question,
-          optionA: item.options.A,
-          optionB: item.options.B,
-          optionC: item.options.C,
-          optionD: item.options.D,
-          optionE: item.options.E,
-          correctAnswer: item.correctAnswer,
-          explanation: item.explanation,
-          wrongOptionsExplanation: item.wrongOptionsExplanation,
-          category: item.category,
-          subcategory: item.subcategory,
-          difficulty: item.difficulty,
-          mode: payload.mode,
-          tags: item.tags,
-          source: item.source,
-          reference: item.reference,
-          aiBatchId: batch.id,
-        },
-      })));
-
-      await tx.aIQuestionBatch.update({
-        where: { id: batch.id },
-        data: { totalGenerated: rows.length, status: 'completed', rawResponse: parsed },
-      });
-
-      return rows;
+    const created = await persistQuestions(batch.id, parsed, payload.mode);
+    await prisma.aIQuestionBatch.update({
+      where: { id: batch.id },
+      data: { totalGenerated: created.length, status: 'completed', rawResponse: parsed },
     });
 
     return { batchId: batch.id, count: created.length, questions: created };
@@ -109,7 +96,7 @@ function buildPrompt(payload: ReturnType<typeof generateQuestionRequestSchema.pa
     'Jangan gunakan field optionA/optionB sebagai pengganti options jika bisa. Jika terpaksa, tetap pastikan maknanya sama.',
     'Gunakan difficulty dalam Bahasa Indonesia: mudah, sedang, atau sulit.',
     'Pastikan tidak ada soal duplikat dalam satu batch.',
-    'Kembalikan JSON array valid atau object {"questions": [...]}.',
+    'Kembalikan JSON array valid atau object {"questions": [...]}.'
   ].join(' ');
 }
 
@@ -120,10 +107,47 @@ function validateBatch(questions: ReturnType<typeof generatedQuestionBatchSchema
   for (const item of questions) {
     if (item.category !== category) throw new Error(`Kategori soal tidak sesuai: ${item.category}`);
     if (item.subcategory !== subcategory) throw new Error(`Subkategori soal tidak sesuai: ${item.subcategory}`);
-    const key = item.question.trim().toLowerCase();
+    const key = `${item.question.trim().toLowerCase()}::${item.questionImageSvg ?? ''}`;
     if (seen.has(key)) throw new Error('Terdapat soal duplikat dalam batch');
     seen.add(key);
   }
+}
+
+async function persistQuestions(
+  batchId: string,
+  questions: ReturnType<typeof generatedQuestionBatchSchema.parse>,
+  mode: ReturnType<typeof generateQuestionRequestSchema.parse>['mode'],
+) {
+  return prisma.$transaction(questions.map((item) => prisma.question.create({ data: buildQuestionCreateData(batchId, item, mode) })));
+}
+
+function buildQuestionCreateData(
+  batchId: string,
+  item: ReturnType<typeof generatedQuestionBatchSchema.parse>[number],
+  mode: ReturnType<typeof generateQuestionRequestSchema.parse>['mode'],
+) {
+  return {
+    question: item.question,
+    optionA: item.options.A,
+    optionB: item.options.B,
+    optionC: item.options.C,
+    optionD: item.options.D,
+    optionE: item.options.E,
+    correctAnswer: item.correctAnswer,
+    explanation: item.explanation,
+    wrongOptionsExplanation: item.wrongOptionsExplanation,
+    category: item.category,
+    subcategory: item.subcategory,
+    difficulty: item.difficulty,
+    mode,
+    questionType: item.questionType,
+    questionImageSvg: item.questionImageSvg,
+    optionImageSvg: item.optionImageSvg,
+    tags: item.tags,
+    source: item.source,
+    reference: item.reference,
+    aiBatchId: batchId,
+  };
 }
 
 function normalizeQuestions(questions: unknown, payload: ReturnType<typeof generateQuestionRequestSchema.parse>) {
@@ -150,6 +174,9 @@ function normalizeQuestions(questions: unknown, payload: ReturnType<typeof gener
       category: payload.category,
       subcategory: payload.subcategory,
       difficulty: normalizeDifficulty(getString(raw.difficulty) ?? payload.difficulty),
+      questionType: 'text' as const,
+      questionImageSvg: undefined,
+      optionImageSvg: undefined,
       tags: Array.isArray(raw.tags)
         ? raw.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0)
         : ['cpns', payload.category.toLowerCase(), payload.subcategory.toLowerCase()],

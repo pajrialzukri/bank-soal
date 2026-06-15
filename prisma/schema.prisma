@@ -123,6 +123,9 @@ model Question {
   subcategory              String
   difficulty               Difficulty
   mode                     QuestionMode    @default(latihan)
+  questionType             String          @default("text")
+  questionImageSvg         String?         @db.Text
+  optionImageSvg           Json?
   tags                     String[]
   source                   String          @default("AI Generated")
   reference                String?

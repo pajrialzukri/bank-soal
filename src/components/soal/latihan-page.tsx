@@ -13,6 +13,10 @@ export async function LatihanPage() {
       item.wrongOptionsExplanation && typeof item.wrongOptionsExplanation === 'object' && !Array.isArray(item.wrongOptionsExplanation)
         ? (item.wrongOptionsExplanation as Record<string, string>)
         : {},
+    optionImageSvg:
+      item.optionImageSvg && typeof item.optionImageSvg === 'object' && !Array.isArray(item.optionImageSvg)
+        ? (item.optionImageSvg as Record<string, string>)
+        : null,
   }));
 
   return (

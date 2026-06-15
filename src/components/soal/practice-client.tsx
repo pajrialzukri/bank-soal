@@ -19,6 +19,9 @@ export type PracticeQuestion = {
   category: string;
   subcategory: string;
   difficulty: string;
+  questionType?: string;
+  questionImageSvg?: string | null;
+  optionImageSvg?: Record<string, string> | null;
 };
 
 type SavedAnswer = { questionId: string; selectedAnswer: string; isCorrect: boolean };
@@ -89,6 +92,7 @@ export function PracticeClient({ questions }: { questions: PracticeQuestion[] })
 
   const savedAnswer = saved[question.id];
   const isCorrect = savedAnswer?.isCorrect;
+  const isFigural = question.questionType === 'figural';
 
   return (
     <div className='grid gap-6 xl:grid-cols-[1fr_320px]'>
@@ -109,11 +113,19 @@ export function PracticeClient({ questions }: { questions: PracticeQuestion[] })
 
         <p className='text-lg font-medium leading-8 text-[#0F172A]'>{question.question}</p>
 
+        {isFigural && question.questionImageSvg ? (
+          <div className='mt-5 rounded-3xl border border-[#E2E8F0] bg-white p-4'>
+            <p className='mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-[#2563EB]'>Gambar Soal</p>
+            <div className='flex justify-center rounded-2xl bg-[#F8FAFC] p-4' dangerouslySetInnerHTML={{ __html: question.questionImageSvg }} />
+          </div>
+        ) : null}
+
         <div className='mt-6 space-y-3'>
           {options.map(([key, value]) => {
             const active = selected === key;
             const correct = showResult && question.correctAnswer === key;
             const wrong = showResult && active && question.correctAnswer !== key;
+            const optionSvg = question.optionImageSvg?.[key];
             return (
               <button
                 key={key}
@@ -131,7 +143,10 @@ export function PracticeClient({ questions }: { questions: PracticeQuestion[] })
                 <span className='mr-3 inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#F8FAFC] text-sm font-bold text-[#2563EB]'>
                   {key}
                 </span>
-                {value}
+                <span className='font-medium'>{value}</span>
+                {isFigural && optionSvg ? (
+                  <div className='mt-3 flex justify-center rounded-2xl bg-[#F8FAFC] p-3' dangerouslySetInnerHTML={{ __html: optionSvg }} />
+                ) : null}
               </button>
             );
           })}
