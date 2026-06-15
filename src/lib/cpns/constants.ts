@@ -1,6 +1,6 @@
 export const CPNS_CATEGORIES = {
   TWK: ['Pancasila', 'UUD 1945', 'NKRI', 'Bhinneka Tunggal Ika', 'Nasionalisme', 'Bela Negara', 'Sejarah Indonesia', 'Integritas', 'Pemerintahan'],
-  TIU: ['Sinonim', 'Antonim', 'Analogi', 'Silogisme', 'Penalaran analitis', 'Aritmatika', 'Persentase', 'Perbandingan', 'Deret angka', 'Deret huruf', 'Soal cerita', 'Figural'],
+  TIU: ['Sinonim', 'Antonim', 'Analogi', 'Silogisme', 'Penalaran analitis', 'Aritmatika', 'Persentase', 'Perbandingan', 'Deret angka', 'Deret huruf', 'Soal cerita', 'Figural', 'Figural Analogi', 'Figural Deret', 'Figural Matriks', 'Figural Refleksi', 'Figural Rotasi'],
   TKP: ['Pelayanan publik', 'Profesionalisme', 'Integritas', 'Kerja sama', 'Komunikasi', 'Adaptasi', 'Sosial budaya', 'Teknologi informasi', 'Anti radikalisme'],
 } as const;
 

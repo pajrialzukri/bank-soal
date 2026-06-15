@@ -14,7 +14,7 @@ type GeneratedFiguralQuestion = {
   explanation: string;
   wrongOptionsExplanation: Record<'A' | 'B' | 'C' | 'D' | 'E', string>;
   category: 'TIU';
-  subcategory: 'Figural';
+  subcategory: string;
   difficulty: 'mudah' | 'sedang' | 'sulit';
   tags: string[];
   source: string;
@@ -29,16 +29,25 @@ const variants = ['analogy', 'sequence', 'matrix', 'reflection', 'rotation'] as 
 
 export function generateFiguralQuestions(payload: Payload): GeneratedFiguralQuestion[] {
   return Array.from({ length: payload.amount }, (_, index) => {
-    const variant = variants[index % variants.length];
-    if (variant === 'analogy') return createAnalogyQuestion(index, payload.difficulty);
-    if (variant === 'sequence') return createSequenceQuestion(index, payload.difficulty);
-    if (variant === 'matrix') return createMatrixQuestion(index, payload.difficulty);
-    if (variant === 'reflection') return createReflectionQuestion(index, payload.difficulty);
-    return createRotationQuestion(index, payload.difficulty);
+    const selected = resolveVariant(payload.subcategory, index);
+    if (selected === 'analogy') return createAnalogyQuestion(index, payload.difficulty, payload.subcategory);
+    if (selected === 'sequence') return createSequenceQuestion(index, payload.difficulty, payload.subcategory);
+    if (selected === 'matrix') return createMatrixQuestion(index, payload.difficulty, payload.subcategory);
+    if (selected === 'reflection') return createReflectionQuestion(index, payload.difficulty, payload.subcategory);
+    return createRotationQuestion(index, payload.difficulty, payload.subcategory);
   });
 }
 
-function createAnalogyQuestion(index: number, difficulty: Payload['difficulty']): GeneratedFiguralQuestion {
+function resolveVariant(subcategory: string, index: number) {
+  if (subcategory === 'Figural Analogi') return 'analogy';
+  if (subcategory === 'Figural Deret') return 'sequence';
+  if (subcategory === 'Figural Matriks') return 'matrix';
+  if (subcategory === 'Figural Refleksi') return 'reflection';
+  if (subcategory === 'Figural Rotasi') return 'rotation';
+  return variants[index % variants.length];
+}
+
+function createAnalogyQuestion(index: number, difficulty: Payload['difficulty'], subcategory: string): GeneratedFiguralQuestion {
   const patterns = [0, 1, 2, 3, 4];
   const correctPattern = patterns[index % patterns.length];
   const options = shuffleDeterministic([...patterns], index + 3);
@@ -53,6 +62,7 @@ function createAnalogyQuestion(index: number, difficulty: Payload['difficulty'])
     correctAnswer,
     tags: ['cpns', 'tiu', 'figural', 'analogi'],
     reference: 'Soal figural analogi gaya CPNS/psikotes',
+    subcategory,
     questionImageSvg: promptBoard([
       shapeToken(0),
       shapeToken(1),
@@ -63,7 +73,7 @@ function createAnalogyQuestion(index: number, difficulty: Payload['difficulty'])
   });
 }
 
-function createSequenceQuestion(index: number, difficulty: Payload['difficulty']): GeneratedFiguralQuestion {
+function createSequenceQuestion(index: number, difficulty: Payload['difficulty'], subcategory: string): GeneratedFiguralQuestion {
   const patterns = [1, 2, 3, 4, 5];
   const correctPattern = patterns[(index + 1) % patterns.length];
   const options = shuffleDeterministic([...patterns], index + 7);
@@ -78,6 +88,7 @@ function createSequenceQuestion(index: number, difficulty: Payload['difficulty']
     correctAnswer,
     tags: ['cpns', 'tiu', 'figural', 'deret'],
     reference: 'Soal figural deret pola gaya CPNS/psikotes',
+    subcategory,
     questionImageSvg: promptBoard([
       barsToken(1),
       barsToken(2),
@@ -88,7 +99,7 @@ function createSequenceQuestion(index: number, difficulty: Payload['difficulty']
   });
 }
 
-function createMatrixQuestion(index: number, difficulty: Payload['difficulty']): GeneratedFiguralQuestion {
+function createMatrixQuestion(index: number, difficulty: Payload['difficulty'], subcategory: string): GeneratedFiguralQuestion {
   const patterns = [1, 2, 3, 4, 5];
   const correctPattern = patterns[(index + 2) % patterns.length];
   const options = shuffleDeterministic([...patterns], index + 11);
@@ -103,12 +114,13 @@ function createMatrixQuestion(index: number, difficulty: Payload['difficulty']):
     correctAnswer,
     tags: ['cpns', 'tiu', 'figural', 'matriks'],
     reference: 'Soal figural matriks gaya CPNS/psikotes',
+    subcategory,
     questionImageSvg: matrixPrompt(correctPattern),
     optionImageSvg: Object.fromEntries(options.map((pattern, idx) => [letters[idx], optionBoard(matrixToken(pattern))])) as Record<'A' | 'B' | 'C' | 'D' | 'E', string>,
   });
 }
 
-function createReflectionQuestion(index: number, difficulty: Payload['difficulty']): GeneratedFiguralQuestion {
+function createReflectionQuestion(index: number, difficulty: Payload['difficulty'], subcategory: string): GeneratedFiguralQuestion {
   const patterns = [0, 1, 2, 3, 4];
   const correctPattern = patterns[(index + 3) % patterns.length];
   const options = shuffleDeterministic([...patterns], index + 13);
@@ -123,12 +135,13 @@ function createReflectionQuestion(index: number, difficulty: Payload['difficulty
     correctAnswer,
     tags: ['cpns', 'tiu', 'figural', 'refleksi'],
     reference: 'Soal figural refleksi gaya CPNS/psikotes',
+    subcategory,
     questionImageSvg: reflectionPrompt(correctPattern),
     optionImageSvg: Object.fromEntries(options.map((pattern, idx) => [letters[idx], optionBoard(reflectionToken(pattern))])) as Record<'A' | 'B' | 'C' | 'D' | 'E', string>,
   });
 }
 
-function createRotationQuestion(index: number, difficulty: Payload['difficulty']): GeneratedFiguralQuestion {
+function createRotationQuestion(index: number, difficulty: Payload['difficulty'], subcategory: string): GeneratedFiguralQuestion {
   const patterns = [0, 1, 2, 3, 4];
   const correctPattern = patterns[(index + 4) % patterns.length];
   const options = shuffleDeterministic([...patterns], index + 17);
@@ -143,6 +156,7 @@ function createRotationQuestion(index: number, difficulty: Payload['difficulty']
     correctAnswer,
     tags: ['cpns', 'tiu', 'figural', 'rotasi'],
     reference: 'Soal figural rotasi gaya CPNS/psikotes',
+    subcategory,
     questionImageSvg: rotationPrompt(correctPattern),
     optionImageSvg: Object.fromEntries(options.map((pattern, idx) => [letters[idx], optionBoard(rotationToken(pattern))])) as Record<'A' | 'B' | 'C' | 'D' | 'E', string>,
   });
@@ -155,6 +169,7 @@ function buildQuestion(input: {
   correctAnswer: 'A' | 'B' | 'C' | 'D' | 'E';
   tags: string[];
   reference: string;
+  subcategory: string;
   questionImageSvg: string;
   optionImageSvg: Record<'A' | 'B' | 'C' | 'D' | 'E', string>;
 }): GeneratedFiguralQuestion {
@@ -170,7 +185,7 @@ function buildQuestion(input: {
         : 'Opsi ini tidak tepat karena arah, posisi, atau jumlah elemennya tidak mengikuti pola pada soal.',
     ])) as Record<'A' | 'B' | 'C' | 'D' | 'E', string>,
     category: 'TIU',
-    subcategory: 'Figural',
+    subcategory: input.subcategory,
     difficulty: input.difficulty,
     tags: input.tags,
     source: 'System Generated Figural',

@@ -27,7 +27,7 @@ export async function generateAndStoreQuestions(input: unknown, createdById?: st
   });
 
   try {
-    if (payload.category === 'TIU' && payload.subcategory === 'Figural') {
+    if (payload.category === 'TIU' && payload.subcategory.startsWith('Figural')) {
       const figuralQuestions = generatedQuestionBatchSchema.parse(generateFiguralQuestions(payload));
       validateBatch(figuralQuestions, payload.amount, payload.category, payload.subcategory);
       const created = await persistQuestions(batch.id, figuralQuestions, payload.mode);
