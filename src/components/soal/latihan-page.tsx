@@ -2,12 +2,18 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card } from '@/components/ui/card';
 import { CPNS_CATEGORIES } from '@/lib/cpns/constants';
 import { prisma } from '@/lib/prisma';
-import { PracticeClient } from '@/components/soal/practice-client';
+import { PracticeClient, type PracticeQuestion } from '@/components/soal/practice-client';
 import { requireUser } from '@/lib/session';
 
 export async function LatihanPage() {
   await requireUser();
-  const questions = await prisma.question.findMany({ where: { isActive: true }, take: 15, orderBy: { createdAt: 'desc' } });
+  const questions: PracticeQuestion[] = (await prisma.question.findMany({ where: { isActive: true }, take: 15, orderBy: { createdAt: 'desc' } })).map((item) => ({
+    ...item,
+    wrongOptionsExplanation:
+      item.wrongOptionsExplanation && typeof item.wrongOptionsExplanation === 'object' && !Array.isArray(item.wrongOptionsExplanation)
+        ? (item.wrongOptionsExplanation as Record<string, string>)
+        : {},
+  }));
 
   return (
     <AppShell>

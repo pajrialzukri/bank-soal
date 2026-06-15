@@ -5,7 +5,7 @@ import { Bookmark, CheckCircle2, Flag, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-type Question = {
+export type PracticeQuestion = {
   id: string;
   question: string;
   optionA: string;
@@ -15,7 +15,7 @@ type Question = {
   optionE: string;
   correctAnswer: string;
   explanation: string;
-  wrongOptionsExplanation: unknown;
+  wrongOptionsExplanation: Record<string, string>;
   category: string;
   subcategory: string;
   difficulty: string;
@@ -23,7 +23,7 @@ type Question = {
 
 type SavedAnswer = { questionId: string; selectedAnswer: string; isCorrect: boolean };
 
-export function PracticeClient({ questions }: { questions: Question[] }) {
+export function PracticeClient({ questions }: { questions: PracticeQuestion[] }) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -32,9 +32,19 @@ export function PracticeClient({ questions }: { questions: Question[] }) {
   const [message, setMessage] = useState<string | null>(null);
 
   const question = questions[index];
-  const options = useMemo(() => question ? [
-    ['A', question.optionA], ['B', question.optionB], ['C', question.optionC], ['D', question.optionD], ['E', question.optionE],
-  ] : [], [question]);
+  const options = useMemo(
+    () =>
+      question
+        ? [
+            ['A', question.optionA],
+            ['B', question.optionB],
+            ['C', question.optionC],
+            ['D', question.optionD],
+            ['E', question.optionE],
+          ]
+        : [],
+    [question],
+  );
 
   if (!question) {
     return (
@@ -85,10 +95,16 @@ export function PracticeClient({ questions }: { questions: Question[] }) {
       <Card>
         <div className='mb-6 flex flex-wrap items-center justify-between gap-3'>
           <div>
-            <p className='text-sm font-semibold uppercase tracking-[0.18em] text-[#2563EB]'>{question.category} • {question.subcategory}</p>
-            <h2 className='mt-2 text-2xl font-bold text-[#0F172A]'>Soal {index + 1} dari {questions.length}</h2>
+            <p className='text-sm font-semibold uppercase tracking-[0.18em] text-[#2563EB]'>
+              {question.category} • {question.subcategory}
+            </p>
+            <h2 className='mt-2 text-2xl font-bold text-[#0F172A]'>
+              Soal {index + 1} dari {questions.length}
+            </h2>
           </div>
-          <div className='rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-sm font-semibold text-[#64748B]'>{question.difficulty}</div>
+          <div className='rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-sm font-semibold text-[#64748B]'>
+            {question.difficulty}
+          </div>
         </div>
 
         <p className='text-lg font-medium leading-8 text-[#0F172A]'>{question.question}</p>
@@ -103,13 +119,18 @@ export function PracticeClient({ questions }: { questions: Question[] }) {
                 key={key}
                 onClick={() => !showResult && setSelected(key)}
                 className={`w-full rounded-2xl border p-4 text-left transition ${
-                  correct ? 'border-[#22C55E] bg-green-50 text-[#0F172A]' :
-                  wrong ? 'border-[#EF4444] bg-red-50 text-[#0F172A]' :
-                  active ? 'border-[#2563EB] bg-blue-50 text-[#0F172A]' :
-                  'border-[#E2E8F0] bg-white text-[#0F172A] hover:border-[#3B82F6] hover:bg-blue-50/40'
+                  correct
+                    ? 'border-[#22C55E] bg-green-50 text-[#0F172A]'
+                    : wrong
+                      ? 'border-[#EF4444] bg-red-50 text-[#0F172A]'
+                      : active
+                        ? 'border-[#2563EB] bg-blue-50 text-[#0F172A]'
+                        : 'border-[#E2E8F0] bg-white text-[#0F172A] hover:border-[#3B82F6] hover:bg-blue-50/40'
                 }`}
               >
-                <span className='mr-3 inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#F8FAFC] text-sm font-bold text-[#2563EB]'>{key}</span>
+                <span className='mr-3 inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#F8FAFC] text-sm font-bold text-[#2563EB]'>
+                  {key}
+                </span>
                 {value}
               </button>
             );
@@ -119,20 +140,55 @@ export function PracticeClient({ questions }: { questions: Question[] }) {
         {showResult ? (
           <div className='mt-6 rounded-3xl border border-[#E2E8F0] bg-[#F8FAFC] p-5'>
             <div className='flex items-center gap-2 font-bold text-[#0F172A]'>
-              {isCorrect ? <CheckCircle2 className='h-5 w-5 text-[#22C55E]' /> : <XCircle className='h-5 w-5 text-[#EF4444]' />}
+              {isCorrect ? (
+                <CheckCircle2 className='h-5 w-5 text-[#22C55E]' />
+              ) : (
+                <XCircle className='h-5 w-5 text-[#EF4444]' />
+              )}
               {isCorrect ? 'Jawaban benar' : `Jawaban salah. Kunci: ${question.correctAnswer}`}
             </div>
-            <p className='mt-3 leading-7 text-[#64748B]'>{question.explanation}</p>
-            <pre className='mt-4 whitespace-pre-wrap rounded-2xl border border-[#E2E8F0] bg-white p-4 text-xs text-[#64748B]'>{JSON.stringify(question.wrongOptionsExplanation, null, 2)}</pre>
+            <div className='mt-4 rounded-2xl border border-[#E2E8F0] bg-white p-4'>
+              <p className='text-sm font-bold uppercase tracking-[0.16em] text-[#2563EB]'>Pembahasan</p>
+              <p className='mt-2 leading-7 text-[#64748B]'>{question.explanation}</p>
+            </div>
+            <div className='mt-4 rounded-2xl border border-[#E2E8F0] bg-white p-4'>
+              <p className='text-sm font-bold uppercase tracking-[0.16em] text-[#2563EB]'>Alasan tiap opsi</p>
+              <div className='mt-3 space-y-3'>
+                {options.map(([key, value]) => {
+                  const explanation = question.wrongOptionsExplanation?.[key] ?? 'Tidak ada keterangan tambahan.';
+                  const isAnswerKey = key === question.correctAnswer;
+                  return (
+                    <div key={`explanation-${key}`} className='rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4'>
+                      <p className='font-semibold text-[#0F172A]'>
+                        Opsi {key} {isAnswerKey ? '(Jawaban benar)' : ''}
+                      </p>
+                      <p className='mt-1 text-sm text-[#64748B]'>{value}</p>
+                      <p className='mt-2 text-sm leading-6 text-[#64748B]'>{explanation}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         ) : null}
 
         {message ? <p className='mt-4 text-sm font-medium text-[#F59E0B]'>{message}</p> : null}
 
         <div className='mt-6 flex flex-wrap gap-3'>
-          <Button type='button' onClick={submitAnswer} disabled={showResult}>Submit Jawaban</Button>
-          <Button type='button' variant='secondary' onClick={toggleBookmark}><Bookmark className='mr-2 h-4 w-4' /> Bookmark</Button>
-          <Button type='button' variant='ghost' onClick={() => setIsDifficult((v) => !v)} className={isDifficult ? 'bg-amber-50 text-[#F59E0B]' : ''}><Flag className='mr-2 h-4 w-4' /> Tandai Sulit</Button>
+          <Button type='button' onClick={submitAnswer} disabled={showResult}>
+            Submit Jawaban
+          </Button>
+          <Button type='button' variant='secondary' onClick={toggleBookmark}>
+            <Bookmark className='mr-2 h-4 w-4' /> Bookmark
+          </Button>
+          <Button
+            type='button'
+            variant='ghost'
+            onClick={() => setIsDifficult((v) => !v)}
+            className={isDifficult ? 'bg-amber-50 text-[#F59E0B]' : ''}
+          >
+            <Flag className='mr-2 h-4 w-4' /> Tandai Sulit
+          </Button>
         </div>
       </Card>
 
@@ -144,11 +200,15 @@ export function PracticeClient({ questions }: { questions: Question[] }) {
               key={item.id}
               onClick={() => go(itemIndex)}
               className={`h-11 rounded-xl border text-sm font-bold ${
-                itemIndex === index ? 'border-[#2563EB] bg-[#2563EB] text-white' :
-                saved[item.id] ? 'border-[#22C55E] bg-green-50 text-[#22C55E]' :
-                'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#3B82F6]'
+                itemIndex === index
+                  ? 'border-[#2563EB] bg-[#2563EB] text-white'
+                  : saved[item.id]
+                    ? 'border-[#22C55E] bg-green-50 text-[#22C55E]'
+                    : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#3B82F6]'
               }`}
-            >{itemIndex + 1}</button>
+            >
+              {itemIndex + 1}
+            </button>
           ))}
         </div>
         <div className='mt-6 rounded-2xl bg-[#F8FAFC] p-4 text-sm text-[#64748B]'>
