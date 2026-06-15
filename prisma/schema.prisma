@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+enum CategoryCode {
+  TWK
+  TIU
+  TKP
+}
+
+enum Difficulty {
+  mudah
+  sedang
+  sulit
+}
+
+enum QuestionMode {
+  latihan
+  try_out
+  HOTS
+}
+
+enum TryOutStatus {
+  draft
+  in_progress
+  submitted
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String?
+  email          String          @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?
+  role           Role            @default(USER)
+  streak         Int             @default(0)
+  accounts       Account[]
+  sessions       Session[]
+  answerHistory  AnswerHistory[]
+  tryOuts        TryOut[]
+  bookmarks      Bookmark[]
+  aiBatches      AIQuestionBatch[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Category {
+  id            String        @id @default(cuid())
+  code          CategoryCode  @unique
+  name          String
+  description   String?
+  subcategories Subcategory[]
+  materials     Material[]
+  createdAt     DateTime      @default(now())
+}
+
+model Subcategory {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  materials   Material[]
+  @@unique([categoryId, slug])
+}
+
+model Question {
+  id                       String          @id @default(cuid())
+  question                 String          @db.Text
+  optionA                  String          @db.Text
+  optionB                  String          @db.Text
+  optionC                  String          @db.Text
+  optionD                  String          @db.Text
+  optionE                  String          @db.Text
+  correctAnswer            String
+  explanation              String          @db.Text
+  wrongOptionsExplanation  Json
+  category                 CategoryCode
+  subcategory              String
+  difficulty               Difficulty
+  mode                     QuestionMode    @default(latihan)
+  tags                     String[]
+  source                   String          @default("AI Generated")
+  reference                String?
+  isActive                 Boolean         @default(true)
+  aiBatchId                String?
+  aiBatch                  AIQuestionBatch? @relation(fields: [aiBatchId], references: [id], onDelete: SetNull)
+  answerHistory            AnswerHistory[]
+  tryOutQuestions          TryOutQuestion[]
+  bookmarks                Bookmark[]
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  @@index([category, subcategory, difficulty])
+}
+
+model AnswerHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  questionId    String
+  selectedAnswer String
+  isCorrect     Boolean
+  isDifficult   Boolean  @default(false)
+  timeSpentSec  Int?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+}
+
+model TryOut {
+  id           String          @id @default(cuid())
+  userId       String
+  title        String
+  status       TryOutStatus    @default(draft)
+  durationMin  Int             @default(100)
+  startedAt    DateTime?
+  submittedAt  DateTime?
+  scoreTWK     Int             @default(0)
+  scoreTIU     Int             @default(0)
+  scoreTKP     Int             @default(0)
+  totalScore   Int             @default(0)
+  analysis     Json?
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions    TryOutQuestion[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model TryOutQuestion {
+  id             String   @id @default(cuid())
+  tryOutId       String
+  questionId     String
+  order          Int
+  selectedAnswer String?
+  isDoubtful     Boolean  @default(false)
+  isCorrect      Boolean?
+  tryOut         TryOut   @relation(fields: [tryOutId], references: [id], onDelete: Cascade)
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  @@unique([tryOutId, questionId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  note       String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  @@unique([userId, questionId])
+}
+
+model Material {
+  id            String       @id @default(cuid())
+  title         String
+  slug          String       @unique
+  content       String       @db.Text
+  categoryId    String
+  subcategoryId String?
+  category      Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subcategory   Subcategory? @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model AIQuestionBatch {
+  id             String        @id @default(cuid())
+  category       CategoryCode
+  subcategory    String
+  totalRequested Int
+  totalGenerated Int           @default(0)
+  difficulty     Difficulty
+  mode           QuestionMode
+  language       String        @default("Indonesia")
+  provider       String
+  model          String
+  prompt         String        @db.Text
+  rawResponse    Json?
+  status         String        @default("pending")
+  error          String?       @db.Text
+  createdById    String?
+  createdBy      User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  questions      Question[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
