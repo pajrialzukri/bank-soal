@@ -15,7 +15,7 @@ const menus = [
   { href: "/materi", label: "Materi", icon: BookOpenCheck, roles: ["USER", "ADMIN", "SUPERADMIN"] },
   { href: "/latihan", label: "Latihan Soal", icon: BrainCircuit, roles: ["USER", "ADMIN", "SUPERADMIN"] },
   { href: "/tryout", label: "Try Out CAT", icon: FileBarChart2, roles: ["USER", "ADMIN", "SUPERADMIN"] },
-  { href: "/admin/generate-ai", label: "Generate Soal AI", icon: Sparkles, roles: ["ADMIN", "SUPERADMIN"] },
+  { href: "/admin/generate-ai", label: "Generate Soal AI", icon: Sparkles, roles: ["USER", "ADMIN", "SUPERADMIN"] },
   { href: "/superadmin/users", label: "User Management", icon: ShieldCheck, roles: ["SUPERADMIN"] },
 ];
 

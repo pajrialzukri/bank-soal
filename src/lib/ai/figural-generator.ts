@@ -189,8 +189,8 @@ function buildArrowFigureSvg(rotation: number, withFrame: boolean) {
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
       ${frame}
       <g transform="translate(60 60) rotate(${rotation}) translate(-60 -60)">
-        <path d="M25 60 H76" stroke="#2563EB" stroke-width="12" stroke-linecap="round"/>
-        <path d="M74 42 L94 60 L74 78" stroke="#2563EB" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M25 60 H76" stroke="#111827" stroke-width="12" stroke-linecap="round"/>
+        <path d="M74 42 L94 60 L74 78" stroke="#111827" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="82" cy="34" r="7" fill="#F59E0B"/>
       </g>
     </svg>
@@ -207,7 +207,7 @@ function buildReflectionPromptSvg(mirror: 'vertical' | 'horizontal' | 'diagonal-
         : mirror === 'diagonal-right'
           ? '<line x1="20" y1="20" x2="100" y2="100" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="6 6" />'
           : '<line x1="18" y1="60" x2="102" y2="60" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="6 6" />';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none"><rect x="8" y="8" width="104" height="104" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" />${line}<path d="M28 78 H66" stroke="#2563EB" stroke-width="10" stroke-linecap="round"/><path d="M64 62 L82 78 L64 94" stroke="#2563EB" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="44" r="7" fill="#F59E0B"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none"><rect x="8" y="8" width="104" height="104" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" />${line}<path d="M28 78 H66" stroke="#111827" stroke-width="10" stroke-linecap="round"/><path d="M64 62 L82 78 L64 94" stroke="#111827" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="44" r="7" fill="#F59E0B"/></svg>`;
 }
 
 function buildReflectedArrowSvg(mode: 'vertical' | 'horizontal' | 'diagonal-left' | 'diagonal-right' | 'none') {
@@ -220,7 +220,7 @@ function buildReflectedArrowSvg(mode: 'vertical' | 'horizontal' | 'diagonal-left
         : mode === 'diagonal-right'
           ? 'translate(120 0) rotate(90)'
           : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none"><rect x="8" y="8" width="104" height="104" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" /><g transform="${transform}"><path d="M28 78 H66" stroke="#2563EB" stroke-width="10" stroke-linecap="round"/><path d="M64 62 L82 78 L64 94" stroke="#2563EB" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="44" r="7" fill="#F59E0B"/></g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none"><rect x="8" y="8" width="104" height="104" rx="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" /><g transform="${transform}"><path d="M28 78 H66" stroke="#111827" stroke-width="10" stroke-linecap="round"/><path d="M64 62 L82 78 L64 94" stroke="#111827" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="42" cy="44" r="7" fill="#F59E0B"/></g></svg>`;
 }
 
 function buildSequencePromptSvg(correctStep: number) {
@@ -235,7 +235,7 @@ function buildSequenceOptionSvg(step: number) {
 function buildSequenceCell(x: number, y: number, step: number) {
   const offset = (step % 3) * 6;
   const dots = Array.from({ length: (step % 4) + 1 }, (_, i) => `<circle cx="${x + 10 + i * 8}" cy="${y + 30 + offset}" r="3.5" fill="#F59E0B"/>`).join('');
-  return `<rect x="${x}" y="${y}" width="26" height="54" rx="10" fill="#EFF6FF" stroke="#BFDBFE"/><rect x="${x + 6 + offset / 2}" y="${y + 10}" width="14" height="34" rx="7" fill="#2563EB"/>${dots}`;
+  return `<rect x="${x}" y="${y}" width="26" height="54" rx="10" fill="#EFF6FF" stroke="#BFDBFE"/><rect x="${x + 6 + offset / 2}" y="${y + 10}" width="14" height="34" rx="7" fill="#111827"/>${dots}`;
 }
 
 function buildMatrixPromptSvg() {
@@ -249,7 +249,7 @@ function buildMatrixOptionSvg(value: number) {
 
 function buildMatrixCell(x: number, y: number, value: number) {
   const dots = Array.from({ length: value }, (_, i) => `<circle cx="${x + 6 + (i % 2) * 10}" cy="${y + 7 + Math.floor(i / 2) * 10}" r="3.2" fill="#F59E0B"/>`).join('');
-  return `<rect x="${x}" y="${y}" width="24" height="24" rx="8" fill="#EFF6FF" stroke="#BFDBFE"/><path d="M${x + 6} ${y + 18} H${x + 18}" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>${dots}`;
+  return `<rect x="${x}" y="${y}" width="24" height="24" rx="8" fill="#EFF6FF" stroke="#BFDBFE"/><path d="M${x + 6} ${y + 18} H${x + 18}" stroke="#111827" stroke-width="4" stroke-linecap="round"/>${dots}`;
 }
 
 function buildAnalogyPromptSvg() {
@@ -266,7 +266,7 @@ function buildAnalogyPair(x: number, y: number, variant: number) {
 
 function buildAnalogySingle(x: number, y: number, variant: number) {
   const rotations = [0, 90, 180, 270, 45];
-  return `<g transform="translate(${x + 14} ${y + 14}) rotate(${rotations[variant % rotations.length]}) translate(-${x + 14} -${y + 14})"><rect x="${x}" y="${y}" width="28" height="28" rx="9" fill="#EFF6FF" stroke="#BFDBFE"/><path d="M${x + 7} ${y + 14} H${x + 20}" stroke="#2563EB" stroke-width="5" stroke-linecap="round"/><circle cx="${x + 18}" cy="${y + 8}" r="3.5" fill="#F59E0B"/></g>`;
+  return `<g transform="translate(${x + 14} ${y + 14}) rotate(${rotations[variant % rotations.length]}) translate(-${x + 14} -${y + 14})"><rect x="${x}" y="${y}" width="28" height="28" rx="9" fill="#EFF6FF" stroke="#BFDBFE"/><path d="M${x + 7} ${y + 14} H${x + 20}" stroke="#111827" stroke-width="5" stroke-linecap="round"/><circle cx="${x + 18}" cy="${y + 8}" r="3.5" fill="#F59E0B"/></g>`;
 }
 
 function shuffleDeterministic<T>(input: T[], seed: number) {
