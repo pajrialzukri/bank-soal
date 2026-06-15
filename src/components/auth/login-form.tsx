@@ -8,8 +8,8 @@ import { Card } from "@/components/ui/card";
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("superadmin@cpnsmaster.local");
-  const [password, setPassword] = useState("SuperAdmin123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -46,6 +46,7 @@ export function LoginForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="Masukkan email"
             required
           />
         </label>
@@ -56,6 +57,7 @@ export function LoginForm() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Masukkan password"
             required
           />
         </label>

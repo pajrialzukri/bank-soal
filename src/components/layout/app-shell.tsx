@@ -8,17 +8,22 @@ import {
   Sparkles,
 } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { getCurrentSessionUser } from "@/lib/session";
 
 const menus = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/materi", label: "Materi", icon: BookOpenCheck },
-  { href: "/latihan", label: "Latihan Soal", icon: BrainCircuit },
-  { href: "/tryout", label: "Try Out CAT", icon: FileBarChart2 },
-  { href: "/admin/generate-ai", label: "Generate Soal AI", icon: Sparkles },
-  { href: "/superadmin/users", label: "User Management", icon: ShieldCheck },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["USER", "ADMIN", "SUPERADMIN"] },
+  { href: "/materi", label: "Materi", icon: BookOpenCheck, roles: ["USER", "ADMIN", "SUPERADMIN"] },
+  { href: "/latihan", label: "Latihan Soal", icon: BrainCircuit, roles: ["USER", "ADMIN", "SUPERADMIN"] },
+  { href: "/tryout", label: "Try Out CAT", icon: FileBarChart2, roles: ["USER", "ADMIN", "SUPERADMIN"] },
+  { href: "/admin/generate-ai", label: "Generate Soal AI", icon: Sparkles, roles: ["ADMIN", "SUPERADMIN"] },
+  { href: "/superadmin/users", label: "User Management", icon: ShieldCheck, roles: ["SUPERADMIN"] },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export async function AppShell({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentSessionUser();
+  const role = user?.role ?? "USER";
+  const visibleMenus = menus.filter((menu) => menu.roles.includes(role));
+
   return (
     <div className="min-h-screen text-[#0F172A]">
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 lg:px-6">
@@ -35,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <nav className="space-y-2">
-            {menus.map((menu) => {
+            {visibleMenus.map((menu) => {
               const Icon = menu.icon;
               return (
                 <Link
@@ -50,6 +55,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="mt-8 border-t border-[#E2E8F0] pt-5">
+            <div className="mb-3 rounded-2xl bg-[#F8FAFC] p-3 text-xs text-[#64748B]">
+              <p className="font-semibold text-[#0F172A]">{user?.name ?? user?.email}</p>
+              <p>{role}</p>
+            </div>
             <LogoutButton />
           </div>
         </aside>
